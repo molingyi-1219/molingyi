@@ -54,6 +54,27 @@ input[type="number"]{width:70px;text-align:center;}
 .modal-mask.show{display:flex;}
 .modal-box{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:28px;border-radius:16px;width:340px;max-width:90vw;border:1px solid rgba(255,255,255,0.15);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
 .modal-box h3{margin-bottom:20px;font-size:20px;text-align:center;}
+/* 聊天窗口 */
+.chat-box{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;width:380px;max-width:94vw;height:520px;max-height:80vh;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,0.15);box-shadow:0 20px 60px rgba(0,0,0,0.5);overflow:hidden;}
+.chat-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.2);}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{max-width:80%;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;}
+.chat-msg.self{background:#e94560;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.chat-msg.other{background:rgba(255,255,255,0.12);color:#fff;align-self:flex-start;border-bottom-left-radius:4px;}
+.chat-time{font-size:10px;color:#888;margin-top:3px;}
+.chat-row-self{display:flex;flex-direction:column;align-items:flex-end;}
+.chat-row-other{display:flex;flex-direction:column;align-items:flex-start;}
+.chat-input-bar{padding:12px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:8px;background:rgba(0,0,0,0.2);}
+.chat-input-bar input{flex:1;}
+.friend-item{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.06);padding:10px 12px;border-radius:10px;margin:6px 0;cursor:pointer;transition:background 0.2s;}
+.friend-item:hover{background:rgba(255,255,255,0.12);}
+.friend-item .user-left{display:flex;align-items:center;gap:10px;}
+.friend-item .chat-icon{font-size:13px;color:#ffd700;}
+/* 背景选择 */
+.bg-options{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;justify-content:center;}
+.bg-option{width:56px;height:40px;border-radius:8px;cursor:pointer;border:2px solid rgba(255,255,255,0.2);background-size:cover;background-position:center;transition:border-color 0.2s;}
+.bg-option.active{border-color:#ffd700;}
+.bg-option .bg-name{font-size:10px;color:#fff;text-shadow:0 0 4px #000;text-align:center;line-height:40px;}
 .form-group{margin-bottom:16px;}
 .form-group label{display:block;margin-bottom:6px;font-size:13px;color:#aaa;}
 .form-group input{width:100%;}
@@ -109,13 +130,17 @@ input[type="number"]{width:70px;text-align:center;}
 <div class="modal-mask" id="loginModal">
     <div class="modal-box">
         <h3 id="modalTitle">登录</h3>
-        <div class="form-group" id="accountGroup">
-            <label>昵称（登录账号）</label>
-            <input type="text" id="inputAccount" placeholder="填写你注册时的昵称">
+        <div class="form-group" id="loginAccountGroup">
+            <label>账号</label>
+            <input type="text" id="inputLoginAccount" placeholder="输入注册时的账号">
         </div>
-        <div class="form-group" id="nicknameGroup" style="display:none;">
-            <label>设置昵称</label>
-            <input type="text" id="inputNickname" placeholder="给自己起个昵称">
+        <div class="form-group" id="regAccountGroup" style="display:none;">
+            <label>设置账号（登录用，不可修改）</label>
+            <input type="text" id="inputRegAccount" placeholder="设置登录账号">
+        </div>
+        <div class="form-group" id="regNicknameGroup" style="display:none;">
+            <label>设置昵称（好友显示用）</label>
+            <input type="text" id="inputRegNickname" placeholder="设置显示昵称">
         </div>
         <div class="form-group">
             <label>密码</label>
@@ -142,17 +167,71 @@ input[type="number"]{width:70px;text-align:center;}
         <button class="btn btn-success" id="signBtn" disabled>请先登录</button>
         <div class="audio-area">
             <p>🎵 背景音乐</p>
-            <div style="margin-bottom:10px;display:flex;gap:8px;">
-                <input type="text" id="musicSearchInput" placeholder="搜索歌曲名/歌手" style="flex:1;">
-                <button class="btn btn-info" id="musicSearchBtn" style="padding:6px 14px;font-size:13px;white-space:nowrap;">搜索</button>
+            <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;margin-bottom:10px;">
+                <p style="font-size:12px;color:#888;margin-bottom:6px;">🎵 网易云歌单（官方播放器，100%能播放）：</p>
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <input type="text" id="playlistInput" placeholder="输入歌单ID或链接" style="flex:1;">
+                    <button class="btn btn-info" id="loadPlaylistBtn" style="padding:6px 14px;font-size:13px;white-space:nowrap;">加载歌单</button>
+                </div>
+                <div id="playlistPlayer" style="display:none;border-radius:8px;overflow:hidden;"></div>
             </div>
-            <div id="musicSearchResult" style="max-height:180px;overflow-y:auto;margin-bottom:10px;"></div>
             <p style="font-size:12px;color:#888;margin:8px 0;">或上传本地音频：</p>
             <input type="file" id="bgMusicInput" accept="audio/*">
             <div style="margin-top:10px;">
                 <button class="btn btn-warning" id="bgMusicBtn">播放音乐</button>
                 <span id="nowPlaying" style="font-size:12px;color:#aaa;margin-left:10px;"></span>
             </div>
+        </div>
+    </div>
+</details>
+<details>
+    <summary>📅 日期倒计时</summary>
+    <div class="details-content">
+        <div id="countdownDisplay" style="display:none;text-align:center;padding:10px 0;">
+            <div style="font-size:18px;font-weight:bold;margin-bottom:10px;" id="countdownTitle"></div>
+            <div style="display:flex;justify-content:center;gap:14px;margin-bottom:10px;">
+                <div style="text-align:center;">
+                    <div style="font-size:34px;font-weight:bold;color:#ffd700;" id="cdDays">0</div>
+                    <div style="font-size:11px;color:#888;">天</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:34px;font-weight:bold;color:#ffd700;" id="cdHours">00</div>
+                    <div style="font-size:11px;color:#888;">时</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:34px;font-weight:bold;color:#ffd700;" id="cdMinutes">00</div>
+                    <div style="font-size:11px;color:#888;">分</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:34px;font-weight:bold;color:#ffd700;" id="cdSeconds">00</div>
+                    <div style="font-size:11px;color:#888;">秒</div>
+                </div>
+            </div>
+            <div style="font-size:12px;color:#888;" id="countdownTarget"></div>
+            <button class="btn btn-danger" style="margin-top:12px;padding:5px 14px;font-size:12px;" id="clearCountdownBtn">清除倒计时</button>
+        </div>
+        <div id="countdownSetup">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label style="font-size:13px;color:#aaa;display:block;margin-bottom:4px;">目标名称（如：高考、生日、元旦）</label>
+                <input type="text" id="countdownName" placeholder="输入目标名称" style="width:100%;">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label style="font-size:13px;color:#aaa;display:block;margin-bottom:4px;">目标日期和时间</label>
+                <input type="datetime-local" id="countdownDate" style="width:100%;color:#fff;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:8px 12px;">
+            </div>
+            <button class="btn btn-primary" id="setCountdownBtn" style="width:100%;">设置倒计时</button>
+        </div>
+    </div>
+</details>
+<details>
+    <summary>🎨 自定义背景</summary>
+    <div class="details-content">
+        <p style="font-size:13px;color:#aaa;margin-bottom:10px;">选择预设背景：</p>
+        <div class="bg-options" id="bgOptions"></div>
+        <p style="font-size:13px;color:#aaa;margin:10px 0;">或上传本地图片作为背景：</p>
+        <input type="file" id="bgImageInput" accept="image/*" style="font-size:13px;">
+        <div style="margin-top:12px;">
+            <button class="btn btn-danger" id="resetBgBtn" style="padding:6px 14px;font-size:13px;">恢复默认背景</button>
         </div>
     </div>
 </details>
@@ -183,10 +262,26 @@ input[type="number"]{width:70px;text-align:center;}
         <div id="searchResult"></div>
         <div class="section-title">📨 收到的好友申请</div>
         <div id="receivedRequests"><div class="empty-tip">暂无申请</div></div>
+        <div class="section-title">👥 我的好友（点击聊天）</div>
+        <div id="myFriends"><div class="empty-tip">登录后查看好友</div></div>
         <div class="section-title">🏆 今日学习时长排行榜</div>
         <div id="rankList"><div class="empty-tip">登录后查看好友排行</div></div>
     </div>
 </details>
+<!-- 聊天弹窗 -->
+<div class="modal-mask" id="chatModal">
+    <div class="chat-box">
+        <div class="chat-header">
+            <span id="chatTitle" style="font-size:16px;font-weight:bold;">💬 聊天</span>
+            <button class="btn" id="closeChatBtn" style="padding:4px 12px;font-size:12px;background:#555;">关闭</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"><div class="empty-tip">开始聊天吧</div></div>
+        <div class="chat-input-bar">
+            <input type="text" id="chatInput" placeholder="输入消息..." style="flex:1;">
+            <button class="btn btn-primary" id="sendMsgBtn" style="padding:6px 16px;font-size:13px;">发送</button>
+        </div>
+    </div>
+</div>
 <div class="timer-section">
     <div class="timer" id="timerDisplay">25:00</div>
     <div class="status" id="timerStatus">准备就绪</div>
@@ -204,10 +299,10 @@ input[type="number"]{width:70px;text-align:center;}
 const APP_KEY = "5BFEC9F3C880A172496943389862EF70";
 const API_DOMAIN = "http://hn.api.yesapi.net/";
 // ============================================================
-//  数据表设计（全部用ext_data存JSON，最稳定）
-//  pomodoro_user: ext_data={nickname, password}
-//  pomodoro_daily: ext_data={uid, date, isSign, studySeconds}
-//  pomodoro_friend_req: ext_data={fromUid, toUid, status}
+//  数据表设计（用自定义字段存数据，ext_data免费版不可写）
+//  pomodoro_user: user_account=账号, name_123=昵称, user_pwd=密码
+//  pomodoro_daily: user_account=用户ID, name_123=日期, user_pwd=JSON(isSign,studySeconds)
+//  pomodoro_friend_req: sender=申请人ID, receiver=接收人ID, user_pwd=状态
 // ============================================================
 
 let currentUser = null;
@@ -245,10 +340,46 @@ function formatSeconds(s){
 function getAvatarChar(nick){
     return nick ? nick.charAt(0).toUpperCase() : '?';
 }
-// 安全解析ext_data
-function parseExt(row){
-    try{ return JSON.parse(row.ext_data || '{}'); }
-    catch(e){ return {}; }
+// 头像显示：有URL显示图片，没有显示首字母
+function avatarDisplay(el, url, char){
+    if(url){
+        el.style.backgroundImage = 'url(' + url + ')';
+        el.style.backgroundSize = 'cover';
+        el.textContent = '';
+    }else{
+        el.style.backgroundImage = '';
+        el.textContent = char;
+    }
+}
+// 返回头像HTML（用于模板拼接）
+function avatarHtml(url, nick, extraStyle){
+    if(url){
+        return `<div class="avatar" style="background-image:url('${url}');background-size:cover;${extraStyle||''}"></div>`;
+    }
+    return `<div class="avatar" style="${extraStyle||''}">${getAvatarChar(nick)}</div>`;
+}
+// 头像URL映射 {uid: 完整URL}，从 pomodoro_avatar 表读取（避免字段长度截断）
+// 存储格式：短串（去掉域名和APP_KEY前缀，51字符，varchar64装得下），读取时还原
+const CDN_DOMAIN = 'https://cd7.okayapi.com/';
+function shortAvatarUrl(fullUrl){
+    // 完整URL -> 短串
+    if(!fullUrl || fullUrl.indexOf(CDN_DOMAIN) !== 0) return fullUrl || '';
+    return fullUrl.replace(CDN_DOMAIN, '').replace(APP_KEY + '_', '');
+}
+function normalizeAvatarUrl(raw){
+    // 短串 -> 完整URL（兼容旧数据：以http开头直接用）
+    if(!raw) return '';
+    if(raw.indexOf('http') === 0) return raw;
+    return CDN_DOMAIN + APP_KEY + '_' + raw;
+}
+let avatarMapCache = null;
+async function getAvatarMap(force){
+    if(avatarMapCache && !force) return avatarMapCache;
+    const all = await queryAll('pomodoro_avatar');
+    const map = {};
+    for(const r of all){ if(r.user_account) map[r.user_account] = normalizeAvatarUrl(r.avatar_url || r.content) || ''; }
+    avatarMapCache = map;
+    return map;
 }
 
 async function callApi(serviceName, params={}){
@@ -270,25 +401,22 @@ async function callApi(serviceName, params={}){
         return {ret: -1, msg: '网络请求失败: ' + e.message};
     }
 }
-// 查询全部记录
+// 查询全部记录（用FreeQuery，App.Table.Query在本应用上会报错）
 async function queryAll(modelName){
-    const res = await callApi('App.Table.Query', {model_name: modelName, perpage: 500});
+    const res = await callApi('App.Table.FreeQuery', {model_name: modelName, perpage: 500});
     if(res.ret === 200 && res.data && res.data.list) return res.data.list;
+    console.error('查询' + modelName + '失败:', res);
     return [];
 }
 
 // ============================================================
-//  用户模块（全部用ext_data存JSON）
+//  用户模块（使用自定义字段：user_account=账号, name_123=昵称, user_pwd=密码）
 // ============================================================
 const loginModal = document.getElementById('loginModal');
 const modalTitle = document.getElementById('modalTitle');
-const inputAccount = document.getElementById('inputAccount');
-const inputNickname = document.getElementById('inputNickname');
 const inputPassword = document.getElementById('inputPassword');
 const submitLoginBtn = document.getElementById('submitLoginBtn');
 const switchModeBtn = document.getElementById('switchModeBtn');
-const accountGroup = document.getElementById('accountGroup');
-const nicknameGroup = document.getElementById('nicknameGroup');
 let isRegisterMode = false;
 
 document.getElementById('openLoginBtn').addEventListener('click', ()=>{
@@ -306,14 +434,16 @@ switchModeBtn.addEventListener('click', ()=>{
 function updateModalMode(){
     if(isRegisterMode){
         modalTitle.textContent = '注册新账号';
-        accountGroup.style.display = 'none';
-        nicknameGroup.style.display = 'block';
+        document.getElementById('loginAccountGroup').style.display = 'none';
+        document.getElementById('regAccountGroup').style.display = 'block';
+        document.getElementById('regNicknameGroup').style.display = 'block';
         submitLoginBtn.textContent = '注册';
         switchModeBtn.textContent = '去登录';
     }else{
         modalTitle.textContent = '登录';
-        accountGroup.style.display = 'block';
-        nicknameGroup.style.display = 'none';
+        document.getElementById('loginAccountGroup').style.display = 'block';
+        document.getElementById('regAccountGroup').style.display = 'none';
+        document.getElementById('regNicknameGroup').style.display = 'none';
         submitLoginBtn.textContent = '登录';
         switchModeBtn.textContent = '去注册';
     }
@@ -323,35 +453,45 @@ submitLoginBtn.addEventListener('click', async ()=>{
     else await doLogin();
 });
 
-// 注册（查重用ext_data解析nickname，确保昵称不重复）
+// 注册：账号+昵称+密码 三个字段分别写入数据库
 async function doRegister(){
-    const nick = inputNickname.value.trim();
+    const account = document.getElementById('inputRegAccount').value.trim();
+    const nickname = document.getElementById('inputRegNickname').value.trim();
     const pwd = inputPassword.value.trim();
-    if(!nick || !pwd){ showToast('昵称和密码不能为空', 'error'); return; }
+    if(!account || !nickname || !pwd){
+        showToast('账号、昵称、密码都不能为空', 'error');
+        return;
+    }
     submitLoginBtn.disabled = true;
     submitLoginBtn.innerHTML = '<span class="loading"></span>';
 
-    // 查重：遍历全部，解析ext_data比对nickname
+    // 双重查重：账号 + 昵称
     const all = await queryAll('pomodoro_user');
     console.log('注册查重，用户表数据:', all);
-    const exists = all.some(row => {
-        const d = parseExt(row);
-        return d.nickname === nick;
-    });
-    if(exists){
+    const accountExists = all.some(row => row.user_account === account);
+    const nickExists = all.some(row => row.name_123 === nickname);
+    if(accountExists){
+        showToast('该账号已被注册', 'error');
+        submitLoginBtn.disabled = false;
+        submitLoginBtn.textContent = '注册';
+        return;
+    }
+    if(nickExists){
         showToast('该昵称已被占用', 'error');
         submitLoginBtn.disabled = false;
         submitLoginBtn.textContent = '注册';
         return;
     }
-    // 创建：ext_data存JSON
+    // 创建：三个字段分别写入
     const res = await callApi('App.Table.Create', {
         model_name: 'pomodoro_user',
-        data_ext_data: JSON.stringify({nickname: nick, password: pwd})
+        data_user_account: account,
+        data_name_123: nickname,
+        data_user_pwd: pwd
     });
     console.log('注册返回:', res);
     if(res.ret === 200 && res.data && res.data.id != null){
-        const user = {id: res.data.id, nickname: nick};
+        const user = {id: res.data.id, account: account, nickname: nickname};
         setCurrentUser(user);
         loginModal.classList.remove('show');
         showToast('注册成功，已自动登录', 'success');
@@ -362,35 +502,34 @@ async function doRegister(){
     submitLoginBtn.textContent = '注册';
 }
 
-// 登录（查询全部，解析ext_data找nickname，比对password）
+// 登录：按账号匹配，比对密码
 async function doLogin(){
-    const nick = inputAccount.value.trim();
+    const account = document.getElementById('inputLoginAccount').value.trim();
     const pwd = inputPassword.value.trim();
-    if(!nick || !pwd){ showToast('昵称和密码不能为空', 'error'); return; }
+    if(!account || !pwd){ showToast('账号和密码不能为空', 'error'); return; }
     submitLoginBtn.disabled = true;
     submitLoginBtn.innerHTML = '<span class="loading"></span>';
 
-    // 查询全部，遍历找nickname匹配
+    // 查询全部，遍历找user_account匹配
     const all = await queryAll('pomodoro_user');
     console.log('登录查询，用户表数据:', all);
-    const row = all.find(r => {
-        const d = parseExt(r);
-        return d.nickname === nick;
-    });
+    const row = all.find(r => r.user_account === account);
     if(!row){
-        showToast('昵称或密码错误', 'error');
+        showToast('账号或密码错误', 'error');
         submitLoginBtn.disabled = false;
         submitLoginBtn.textContent = '登录';
         return;
     }
-    const d = parseExt(row);
-    if(d.password !== pwd){
-        showToast('昵称或密码错误', 'error');
+    if(row.user_pwd !== pwd){
+        showToast('账号或密码错误', 'error');
         submitLoginBtn.disabled = false;
         submitLoginBtn.textContent = '登录';
         return;
     }
-    const user = {id: row.id, nickname: d.nickname};
+    const user = {id: row.id, account: row.user_account, nickname: row.name_123, avatar_url: ''};
+    // 从 pomodoro_avatar 表读自己的头像
+    const amap = await getAvatarMap(true);
+    user.avatar_url = amap[user.id] || '';
     setCurrentUser(user);
     loginModal.classList.remove('show');
     showToast('登录成功', 'success');
@@ -412,14 +551,9 @@ function renderUserInfo(){
         loginedView.style.display = 'flex';
         document.getElementById('userName').textContent = currentUser.nickname;
         const avatarEl = document.getElementById('userAvatar');
-        const savedAvatar = localStorage.getItem('avatar_' + currentUser.id);
-        if(savedAvatar){
-            avatarEl.style.backgroundImage = 'url(' + savedAvatar + ')';
-            avatarEl.textContent = '';
-        }else{
-            avatarEl.style.backgroundImage = '';
-            avatarEl.textContent = getAvatarChar(currentUser.nickname);
-        }
+        // 优先云端头像URL，其次本地缓存
+        const avatarUrl = currentUser.avatar_url || localStorage.getItem('avatar_' + currentUser.id);
+        avatarDisplay(avatarEl, avatarUrl, getAvatarChar(currentUser.nickname));
     }else{
         notLoginView.style.display = 'block';
         loginedView.style.display = 'none';
@@ -440,22 +574,86 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
     showToast('已退出登录');
 });
 
-// 上传头像
+// 上传头像（压缩后上传到果创云CDN，URL存入用户表，好友可见）
 const avatarInput = document.getElementById('avatarInput');
 document.getElementById('userAvatar').addEventListener('click', ()=>{
     if(currentUser) avatarInput.click();
 });
-avatarInput.addEventListener('change', (e)=>{
+avatarInput.addEventListener('change', async (e)=>{
     const file = e.target.files[0];
     if(!file || !currentUser) return;
-    if(file.size > 2*1024*1024){ showToast('图片不能超过2MB', 'error'); return; }
-    const reader = new FileReader();
-    reader.onload = (ev)=>{
-        localStorage.setItem('avatar_' + currentUser.id, ev.target.result);
-        renderUserInfo();
-        showToast('头像已更新', 'success');
-    };
-    reader.readAsDataURL(file);
+    if(file.size > 5*1024*1024){ showToast('图片不能超过5MB', 'error'); return; }
+    const btn = document.getElementById('userAvatar');
+    const oldText = btn.textContent;
+    btn.innerHTML = '<span class="loading"></span>';
+    try{
+        // 用canvas压缩到100x100
+        const img = new Image();
+        const dataUrl = await new Promise((resolve, reject)=>{
+            const reader = new FileReader();
+            reader.onload = ()=>resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        img.src = dataUrl;
+        await new Promise((resolve, reject)=>{
+            img.onload = resolve;
+            img.onerror = reject;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#e94560';
+        ctx.fillRect(0, 0, 100, 100);
+        ctx.drawImage(img, 0, 0, 100, 100);
+        const b64data = canvas.toDataURL('image/png').split(',')[1];
+        // 上传到果创云CDN
+        const res = await callApi('App.CDN.UploadImgByBase64', {
+            file: b64data,
+            file_name: 'avatar_' + currentUser.id + '_' + Date.now() + '.png'
+        });
+        console.log('头像上传返回:', res);
+        if(res.ret === 200 && res.data && res.data.https_url){
+            const avatarUrl = res.data.https_url;
+            const shortUrl = shortAvatarUrl(avatarUrl);  // 存短串，避免字段长度截断
+            // 存入 pomodoro_avatar 表（字段名：user_account + avatar_url）
+            const avatarRows = await queryAll('pomodoro_avatar');
+            const existing = avatarRows.find(r => r.user_account == currentUser.id);
+            let saveRes;
+            if(existing){
+                saveRes = await callApi('App.Table.Update', {
+                    model_name: 'pomodoro_avatar',
+                    id: existing.id,
+                    data_avatar_url: shortUrl
+                });
+            }else{
+                saveRes = await callApi('App.Table.Create', {
+                    model_name: 'pomodoro_avatar',
+                    data_user_account: currentUser.id,
+                    data_avatar_url: shortUrl
+                });
+            }
+            if(!saveRes || saveRes.ret !== 200 || !saveRes.data || saveRes.data.id == null){
+                showToast('图片上传成功但保存失败，请检查pomodoro_avatar表字段', 'error');
+                renderUserInfo();
+                avatarInput.value = '';
+                return;
+            }
+            avatarMapCache = null;  // 清缓存
+            // 更新本地状态
+            currentUser.avatar_url = avatarUrl;
+            localStorage.setItem('pomodoro_user', JSON.stringify(currentUser));
+            renderUserInfo();
+            showToast('头像已更新', 'success');
+        }else{
+            showToast('头像上传失败: ' + (res.msg||res.ret), 'error');
+        }
+    }catch(err){
+        console.error('头像处理失败', err);
+        showToast('头像处理失败', 'error');
+    }
+    renderUserInfo();
     avatarInput.value = '';
 });
 
@@ -476,24 +674,29 @@ function restoreLogin(){
 async function getDailyRecord(uid, date){
     const all = await queryAll('pomodoro_daily');
     return all.find(r => {
-        const d = parseExt(r);
-        return d.uid == uid && d.date === date;
+        return r.user_account == uid && r.name_123 === date;
     }) || null;
+}
+function parseDailyPwd(user_pwd){
+    try{ return JSON.parse(user_pwd || '{}'); }
+    catch(e){ return {}; }
 }
 async function ensureTodayRecord(){
     const today = getTodayStr();
     const record = await getDailyRecord(currentUser.id, today);
     if(record){
         todayRecordId = record.id;
-        const d = parseExt(record);
+        const d = parseDailyPwd(record.user_pwd);
         isSignedToday = !!d.isSign;
         todaySeconds = d.studySeconds || 0;
         return {id: record.id, data: d};
     }
-    const initData = {uid: currentUser.id, date: today, isSign: false, studySeconds: 0};
+    const initData = {isSign: false, studySeconds: 0};
     const res = await callApi('App.Table.Create', {
         model_name: 'pomodoro_daily',
-        data_ext_data: JSON.stringify(initData)
+        data_user_account: currentUser.id,
+        data_name_123: today,
+        data_user_pwd: JSON.stringify(initData)
     });
     if(res.ret === 200 && res.data && res.data.id != null){
         todayRecordId = res.data.id;
@@ -505,12 +708,13 @@ async function ensureTodayRecord(){
 }
 async function updateTodayRecord(){
     if(!currentUser || !todayRecordId) return;
-    const data = {uid: currentUser.id, date: getTodayStr(), isSign: isSignedToday, studySeconds: todaySeconds};
-    await callApi('App.Table.Update', {
+    const data = {isSign: isSignedToday, studySeconds: todaySeconds};
+    const res = await callApi('App.Table.Update', {
         model_name: 'pomodoro_daily',
         id: todayRecordId,
-        data_ext_data: JSON.stringify(data)
+        data_user_pwd: JSON.stringify(data)
     });
+    console.log('更新每日记录 id=' + todayRecordId, 'data=', JSON.stringify(data), '返回=', res);
 }
 document.getElementById('signBtn').addEventListener('click', async ()=>{
     if(!currentUser){ showToast('请先登录', 'error'); return; }
@@ -546,14 +750,26 @@ async function refreshMonthlySignCount(){
     const month = getMonthStr();
     const all = await queryAll('pomodoro_daily');
     let count = 0;
+    let myRecords = [];
     for(const row of all){
-        const d = parseExt(row);
-        if(d.uid == currentUser.id && d.date && d.date.startsWith(month) && d.isSign) count++;
+        if(row.user_account != currentUser.id) continue;
+        myRecords.push(row);
+        const date = row.name_123 || '';
+        if(date.startsWith(month)){
+            const d = parseDailyPwd(row.user_pwd);
+            if(d.isSign) count++;
+        }
     }
+    console.log('每月签到统计: 当前用户id=' + currentUser.id, '本月=' + month, '我的记录=' + JSON.stringify(myRecords), '本月签到数=' + count);
     document.getElementById('monthSignCount').textContent = count;
 }
 async function onUserLogin(){
     if(!currentUser) return;
+    // 刷新自己的头像（从云端pomodoro_avatar表）
+    const amap = await getAvatarMap(true);
+    currentUser.avatar_url = amap[currentUser.id] || '';
+    localStorage.setItem('pomodoro_user', JSON.stringify(currentUser));
+    renderUserInfo();
     await ensureTodayRecord();
     await refreshMonthlySignCount();
     refreshDailyUI();
@@ -563,10 +779,11 @@ async function onUserLogin(){
     }, 30000);
     renderReceivedRequests();
     renderRankList();
+    renderMyFriends();
 }
 
 // ============================================================
-//  好友模块（全部用ext_data存JSON）
+//  好友模块（使用sender=申请人, receiver=接收人, user_pwd=状态）
 // ============================================================
 document.getElementById('searchBtn').addEventListener('click', async ()=>{
     const keyword = document.getElementById('searchInput').value.trim();
@@ -577,22 +794,22 @@ document.getElementById('searchBtn').addEventListener('click', async ()=>{
     const all = await queryAll('pomodoro_user');
     console.log('搜索用户，全部数据:', all);
     const matches = all.filter(r => {
-        const d = parseExt(r);
-        return d.nickname && d.nickname.includes(keyword) && r.id != currentUser.id;
+        return r.name_123 && r.name_123.includes(keyword) && r.id != currentUser.id;
     });
     if(matches.length === 0){
         box.innerHTML = '<div class="empty-tip">未找到该用户</div>';
         return;
     }
+    const avatarMap = await getAvatarMap();
     let html = '';
     for(const r of matches){
-        const d = parseExt(r);
+        const nick = r.name_123;
         html += `<div class="user-card">
             <div class="user-left">
-                <div class="avatar">${getAvatarChar(d.nickname)}</div>
-                <span class="nick">${d.nickname}</span>
+                ${avatarHtml(avatarMap[r.id], nick, 'width:30px;height:30px;font-size:14px;')}
+                <span class="nick">${nick}</span>
             </div>
-            <button class="btn btn-primary" style="padding:5px 14px;font-size:13px;" onclick="sendFriendRequest(${r.id}, '${d.nickname}')">加好友</button>
+            <button class="btn btn-primary" style="padding:5px 14px;font-size:13px;" onclick="sendFriendRequest(${r.id}, '${nick}')">加好友</button>
         </div>`;
     }
     box.innerHTML = html;
@@ -601,20 +818,22 @@ document.getElementById('searchBtn').addEventListener('click', async ()=>{
 async function sendFriendRequest(toUid, toNick){
     if(!currentUser){ showToast('请先登录', 'error'); return; }
     const all = await queryAll('pomodoro_friend_req');
-    // 查重
+    // 查重（用sender/receiver字段）
     for(const row of all){
-        const d = parseExt(row);
-        if((d.fromUid == currentUser.id && d.toUid == toUid) ||
-           (d.fromUid == toUid && d.toUid == currentUser.id)){
-            if(d.status === 'accept') showToast('你们已经是好友了');
-            else if(d.status === 'pending') showToast('好友申请已发送，等待对方处理');
+        if((row.sender == currentUser.id && row.receiver == toUid) ||
+           (row.sender == toUid && row.receiver == currentUser.id)){
+            if(row.user_pwd === 'accept') showToast('你们已经是好友了');
+            else if(row.user_pwd === 'pending') showToast('好友申请已发送，等待对方处理');
             else showToast('之前的申请被拒绝了');
             return;
         }
     }
+    // 创建：sender=申请人ID, receiver=接收人ID, user_pwd=状态
     const res = await callApi('App.Table.Create', {
         model_name: 'pomodoro_friend_req',
-        data_ext_data: JSON.stringify({fromUid: currentUser.id, toUid: toUid, status: 'pending'})
+        data_sender: currentUser.id,
+        data_receiver: toUid,
+        data_user_pwd: 'pending'
     });
     console.log('发送好友申请返回:', res);
     if(res.ret === 200 && res.data && res.data.id != null){
@@ -632,21 +851,21 @@ async function renderReceivedRequests(){
     const all = await queryAll('pomodoro_friend_req');
     const pending = [];
     for(const row of all){
-        const d = parseExt(row);
-        if(d.status === 'pending' && d.toUid == currentUser.id){
-            pending.push({id: row.id, fromUid: d.fromUid});
+        if(row.user_pwd === 'pending' && row.receiver == currentUser.id){
+            pending.push({id: row.id, fromUid: row.sender});
         }
     }
     if(pending.length === 0){ box.innerHTML = '<div class="empty-tip">暂无申请</div>'; return; }
     const users = await queryAll('pomodoro_user');
     const userMap = {};
-    for(const u of users){ const d = parseExt(u); userMap[u.id] = d.nickname; }
+    for(const u of users){ userMap[u.id] = u.name_123; }
+    const avatarMap = await getAvatarMap();
     let html = '';
     for(const req of pending){
         const nick = userMap[req.fromUid] || ('用户' + req.fromUid);
         html += `<div class="user-card">
             <div class="user-left">
-                <div class="avatar">${getAvatarChar(nick)}</div>
+                ${avatarHtml(avatarMap[req.fromUid], nick, 'width:30px;height:30px;font-size:14px;')}
                 <span class="nick">${nick}</span>
             </div>
             <div class="req-actions">
@@ -659,15 +878,10 @@ async function renderReceivedRequests(){
 }
 
 async function acceptRequest(id){
-    const all = await queryAll('pomodoro_friend_req');
-    const row = all.find(r => r.id == id);
-    if(!row) return;
-    const d = parseExt(row);
-    d.status = 'accept';
     await callApi('App.Table.Update', {
         model_name: 'pomodoro_friend_req',
         id: id,
-        data_ext_data: JSON.stringify(d)
+        data_user_pwd: 'accept'
     });
     showToast('已同意好友申请', 'success');
     renderReceivedRequests();
@@ -675,15 +889,10 @@ async function acceptRequest(id){
 }
 
 async function rejectRequest(id){
-    const all = await queryAll('pomodoro_friend_req');
-    const row = all.find(r => r.id == id);
-    if(!row) return;
-    const d = parseExt(row);
-    d.status = 'reject';
     await callApi('App.Table.Update', {
         model_name: 'pomodoro_friend_req',
         id: id,
-        data_ext_data: JSON.stringify(d)
+        data_user_pwd: 'reject'
     });
     showToast('已拒绝', 'error');
     renderReceivedRequests();
@@ -694,10 +903,9 @@ async function getFriendUids(){
     const all = await queryAll('pomodoro_friend_req');
     const friends = [];
     for(const row of all){
-        const d = parseExt(row);
-        if(d.status !== 'accept') continue;
-        if(d.fromUid == currentUser.id) friends.push(d.toUid);
-        else if(d.toUid == currentUser.id) friends.push(d.fromUid);
+        if(row.user_pwd !== 'accept') continue;
+        if(row.sender == currentUser.id) friends.push(row.receiver);
+        else if(row.receiver == currentUser.id) friends.push(row.sender);
     }
     return friends;
 }
@@ -711,16 +919,19 @@ async function renderRankList(){
     const dailyAll = await queryAll('pomodoro_daily');
     const dailyMap = {};
     for(const row of dailyAll){
-        const d = parseExt(row);
-        if(d.date === today) dailyMap[d.uid] = d.studySeconds || 0;
+        if(row.name_123 === today){
+            const d = parseDailyPwd(row.user_pwd);
+            dailyMap[row.user_account] = d.studySeconds || 0;
+        }
     }
     const users = await queryAll('pomodoro_user');
     const userMap = {};
-    for(const u of users){ const d = parseExt(u); userMap[u.id] = d.nickname; }
+    for(const u of users){ userMap[u.id] = u.name_123; }
+    const avatarMap = await getAvatarMap();
     const rankData = [];
-    rankData.push({uid: currentUser.id, nickname: currentUser.nickname+'（我）', seconds: dailyMap[currentUser.id]||todaySeconds});
+    rankData.push({uid: currentUser.id, nickname: currentUser.nickname+'（我）', avatar: avatarMap[currentUser.id] || '', seconds: dailyMap[currentUser.id]||todaySeconds});
     for(const fid of friendUids){
-        rankData.push({uid: fid, nickname: userMap[fid]||('用户'+fid), seconds: dailyMap[fid]||0});
+        rankData.push({uid: fid, nickname: userMap[fid]||('用户'+fid), avatar: avatarMap[fid] || '', seconds: dailyMap[fid]||0});
     }
     rankData.sort((a,b)=>b.seconds-a.seconds);
     if(rankData.length <= 1 && friendUids.length === 0){
@@ -733,7 +944,7 @@ async function renderRankList(){
         html += `<div class="rank-item ${cls}">
             <div class="rank-left">
                 <div class="rank-num">${idx+1}</div>
-                <div class="avatar" style="width:28px;height:28px;font-size:13px;">${getAvatarChar(item.nickname)}</div>
+                ${avatarHtml(item.avatar, item.nickname, 'width:28px;height:28px;font-size:13px;')}
                 <span class="nick">${item.nickname}</span>
             </div>
             <span class="rank-time">${formatSeconds(item.seconds)}</span>
@@ -832,77 +1043,29 @@ const bgAudio = document.getElementById('bgAudio');
 const bgMusicBtn = document.getElementById('bgMusicBtn');
 let isMusicPlaying = false;
 
-// ========== 联网搜索音乐 ==========
-document.getElementById('musicSearchBtn').addEventListener('click', searchMusic);
-document.getElementById('musicSearchInput').addEventListener('keypress', (e)=>{
-    if(e.key === 'Enter') searchMusic();
+// ========== 网易云歌单（官方外链播放器，100%能播放） ==========
+document.getElementById('loadPlaylistBtn').addEventListener('click', loadPlaylist);
+document.getElementById('playlistInput').addEventListener('keypress', (e)=>{
+    if(e.key === 'Enter') loadPlaylist();
 });
 
-// CORS代理列表，按优先级自动尝试
-const CORS_PROXIES = [
-    url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-    url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
-    url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)
-];
-async function fetchWithProxy(url){
-    for(let i = 0; i < CORS_PROXIES.length; i++){
-        try{
-            const resp = await fetch(CORS_PROXIES[i](url));
-            if(resp.ok) return await resp.json();
-        }catch(e){ console.warn('代理'+i+'失败，换下一个'); }
-    }
-    throw new Error('所有代理都失败');
+function extractPlaylistId(input){
+    const match = input.match(/[?&]id=(\d+)/);
+    if(match) return match[1];
+    if(/^\d+$/.test(input.trim())) return input.trim();
+    return null;
 }
 
-async function searchMusic(){
-    const keyword = document.getElementById('musicSearchInput').value.trim();
-    const box = document.getElementById('musicSearchResult');
-    if(!keyword){ showToast('请输入搜索关键词', 'error'); return; }
-    box.innerHTML = '<div class="empty-tip"><span class="loading"></span> 搜索中...</div>';
-    try{
-        // 网易云官方搜索API
-        const apiUrl = `https://music.163.com/api/search/get/web?s=${encodeURIComponent(keyword)}&type=1&offset=0&limit=10`;
-        const data = await fetchWithProxy(apiUrl);
-        const songs = data.result && data.result.songs ? data.result.songs : [];
-        if(songs.length === 0){
-            box.innerHTML = '<div class="empty-tip">未找到相关歌曲</div>';
-            return;
-        }
-        let html = '';
-        songs.forEach((song, idx) => {
-            const artist = song.artists && song.artists.length > 0 ? song.artists.map(a=>a.name).join('/') : '未知歌手';
-            const safeName = (song.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            const safeArtist = artist.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            html += `<div class="user-card" style="cursor:pointer;padding:8px 10px;" onclick="playOnlineMusic('${song.id}', '${safeName}', '${safeArtist}')">
-                <div class="user-left">
-                    <span style="font-size:12px;color:#888;width:18px;">${idx+1}</span>
-                    <div>
-                        <div style="font-size:13px;">${song.name || '未知歌曲'}</div>
-                        <div style="font-size:11px;color:#888;">${artist}</div>
-                    </div>
-                </div>
-                <span style="font-size:12px;color:#ffd700;">▶</span>
-            </div>`;
-        });
-        box.innerHTML = html;
-    }catch(e){
-        box.innerHTML = '<div class="empty-tip">搜索失败，请稍后重试</div>';
-        console.error('音乐搜索失败', e);
-    }
-}
-
-function playOnlineMusic(songId, name, artist){
-    // 网易云外链播放地址
-    const url = `https://music.163.com/song/media/outer/url?id=${songId}.mp3`;
-    bgAudio.src = url;
-    bgAudio.play().then(()=>{
-        isMusicPlaying = true;
-        bgMusicBtn.textContent = '暂停音乐';
-        document.getElementById('nowPlaying').textContent = '正在播放：' + name + ' - ' + artist;
-        showToast('开始播放', 'success');
-    }).catch(()=>{
-        showToast('播放失败，换一首试试', 'error');
-    });
+function loadPlaylist(){
+    const input = document.getElementById('playlistInput').value.trim();
+    if(!input){ showToast('请输入歌单ID或链接', 'error'); return; }
+    const playlistId = extractPlaylistId(input);
+    if(!playlistId){ showToast('无法识别歌单ID，请输入数字ID或包含id=的链接', 'error'); return; }
+    // 网易云官方外链播放器，不需要任何API，直接嵌入就能播放
+    const player = document.getElementById('playlistPlayer');
+    player.innerHTML = `<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="100%" height="430" src="https://music.163.com/outchain/player?type=0&id=${playlistId}&auto=0&height=430"></iframe>`;
+    player.style.display = 'block';
+    showToast('歌单加载成功，点播放器里的播放按钮', 'success');
 }
 
 // ========== 本地上传 ==========
@@ -927,15 +1090,324 @@ bgMusicBtn.addEventListener('click', ()=>{
 });
 
 // ============================================================
-//  初始化
+//  自定义背景
+// ============================================================
+const BG_PRESETS = [
+    {name:'🍅', css:'linear-gradient(135deg,#e94560,#c0392b)'},
+    {name:'🌌', css:'linear-gradient(135deg,#0f2027,#203a43,#2c5364)'},
+    {name:'🌿', css:'linear-gradient(135deg,#11998e,#38ef7d)'},
+    {name:'🌇', css:'linear-gradient(135deg,#f7971e,#ffd200)'},
+    {name:'💜', css:'linear-gradient(135deg,#6a3093,#a044ff)'},
+    {name:'🌊', css:'linear-gradient(135deg,#2193b0,#6dd5ed)'}
+];
+function applyBackground(bgValue){
+    if(!bgValue){
+        // 恢复默认
+        document.body.style.backgroundImage = 'url("background.gif")';
+        document.body.style.backgroundColor = 'rgba(0,0,0,0.4)';
+        document.body.style.backgroundBlendMode = 'multiply';
+        return;
+    }
+    if(bgValue.startsWith('data:') || bgValue.startsWith('http')){
+        // 图片背景
+        document.body.style.backgroundImage = 'url(' + bgValue + ')';
+        document.body.style.backgroundColor = 'rgba(0,0,0,0.4)';
+        document.body.style.backgroundBlendMode = 'multiply';
+    }else{
+        // 渐变背景
+        document.body.style.backgroundImage = bgValue;
+        document.body.style.backgroundColor = '';
+        document.body.style.backgroundBlendMode = 'normal';
+    }
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundAttachment = 'fixed';
+}
+function renderBgOptions(){
+    const box = document.getElementById('bgOptions');
+    const saved = localStorage.getItem('pomodoro_bg');
+    let html = '';
+    BG_PRESETS.forEach((bg, idx)=>{
+        const active = saved === bg.css ? 'active' : '';
+        html += `<div class="bg-option ${active}" style="background:${bg.css};" onclick="selectBg(${idx})"><div class="bg-name">${bg.name}</div></div>`;
+    });
+    box.innerHTML = html;
+}
+function selectBg(idx){
+    const bg = BG_PRESETS[idx];
+    localStorage.setItem('pomodoro_bg', bg.css);
+    applyBackground(bg.css);
+    renderBgOptions();
+    showToast('背景已更换', 'success');
+}
+document.getElementById('bgImageInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 8 * 1024 * 1024){ showToast('图片不能超过8MB', 'error'); return; }
+    try{
+        // 读取图片为dataURL
+        const dataUrl = await new Promise((resolve, reject)=>{
+            const reader = new FileReader();
+            reader.onload = ()=>resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        // 优先直接存原图（base64小于3MB时，无需压缩，最稳）
+        if(dataUrl.length < 3 * 1024 * 1024){
+            localStorage.setItem('pomodoro_bg', dataUrl);
+            applyBackground(dataUrl);
+            renderBgOptions();
+            showToast('背景已更新', 'success');
+            e.target.value = '';
+            return;
+        }
+        // 图太大才用canvas压缩
+        try{
+            const img = new Image();
+            img.src = dataUrl;
+            await new Promise((resolve, reject)=>{ img.onload = resolve; img.onerror = reject; });
+            const maxSide = 1280;
+            let w = img.width, h = img.height;
+            if(!w || !h) throw new Error('图片尺寸无效');
+            if(Math.max(w, h) > maxSide){
+                const scale = maxSide / Math.max(w, h);
+                w = Math.round(w * scale);
+                h = Math.round(h * scale);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const compressed = canvas.toDataURL('image/jpeg', 0.7);
+            localStorage.setItem('pomodoro_bg', compressed);
+            applyBackground(compressed);
+            renderBgOptions();
+            showToast('背景已更新', 'success');
+        }catch(err2){
+            console.error('背景压缩失败', err2);
+            showToast('图片太大且无法自动压缩，请换一张小于3MB的图片', 'error');
+        }
+    }catch(err){
+        console.error('背景处理失败', err);
+        showToast('背景处理失败，换一张试试', 'error');
+    }
+    e.target.value = '';
+});
+document.getElementById('resetBgBtn').addEventListener('click', ()=>{
+    localStorage.removeItem('pomodoro_bg');
+    applyBackground('');
+    renderBgOptions();
+    showToast('已恢复默认背景');
+});
+function loadBackground(){
+    const saved = localStorage.getItem('pomodoro_bg');
+    if(saved) applyBackground(saved);
+    renderBgOptions();
+}
 
+// ============================================================
+//  好友聊天（pomodoro_message表: sender=发送者, receiver=接收者, content=内容）
+// ============================================================
+let chatWithId = null;
+let chatPollTimer = null;
+let chatSession = 0;  // 每次打开聊天+1，用于防止旧轮询覆盖新窗口
+
+function openChat(friendId, friendNick){
+    if(!currentUser){ showToast('请先登录', 'error'); return; }
+    chatWithId = friendId;
+    chatSession++;  // 新会话，旧轮询自动失效
+    document.getElementById('chatTitle').textContent = '💬 与 ' + friendNick + ' 聊天';
+    document.getElementById('chatMessages').innerHTML = '<div class="empty-tip">加载中...</div>';
+    document.getElementById('chatModal').classList.add('show');
+    document.getElementById('chatInput').value = '';
+    loadChatMessages(chatSession);
+    // 开启轮询
+    if(chatPollTimer) clearInterval(chatPollTimer);
+    chatPollTimer = setInterval(()=>loadChatMessages(chatSession), 3000);
+    setTimeout(()=>{ document.getElementById('chatInput').focus(); }, 300);
+}
+function closeChat(){
+    document.getElementById('chatModal').classList.remove('show');
+    chatSession++;  // 使旧轮询失效
+    if(chatPollTimer){ clearInterval(chatPollTimer); chatPollTimer = null; }
+    chatWithId = null;
+}
+document.getElementById('closeChatBtn').addEventListener('click', closeChat);
+document.getElementById('sendMsgBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keypress', (e)=>{
+    if(e.key === 'Enter') sendChatMessage();
+});
+
+async function sendChatMessage(){
+    if(!currentUser || !chatWithId) return;
+    const content = document.getElementById('chatInput').value.trim();
+    if(!content){ showToast('请输入消息', 'error'); return; }
+    const res = await callApi('App.Table.Create', {
+        model_name: 'pomodoro_message',
+        data_sender: currentUser.id,
+        data_receiver: chatWithId,
+        data_content: content
+    });
+    console.log('发送消息返回:', res);
+    if(res.ret === 200 && res.data && res.data.id != null){
+        document.getElementById('chatInput').value = '';
+        await loadChatMessages(chatSession);
+    }else{
+        showToast('发送失败: ' + (res.msg||res.ret) + '（是否已建pomodoro_message表？）', 'error');
+    }
+}
+
+async function loadChatMessages(session){
+    if(!currentUser || !chatWithId) return;
+    const mySession = (session !== undefined) ? session : chatSession;
+    const all = await queryAll('pomodoro_message');
+    // 查询期间可能已切换/关闭聊天，丢弃过期结果
+    if(mySession !== chatSession || !chatWithId) return;
+    // 筛选与我相关的消息
+    const msgs = all.filter(r =>
+        (r.sender == currentUser.id && r.receiver == chatWithId) ||
+        (r.sender == chatWithId && r.receiver == currentUser.id)
+    );
+    // 按add_time排序
+    msgs.sort((a,b)=> (a.add_time||'').localeCompare(b.add_time||''));
+    // 强制渲染（不依赖计数判断，杜绝"加载中"卡死）
+    renderChatMessages(msgs);
+}
+function renderChatMessages(msgs){
+    const box = document.getElementById('chatMessages');
+    if(msgs.length === 0){
+        box.innerHTML = '<div class="empty-tip">开始聊天吧</div>';
+        return;
+    }
+    let html = '';
+    for(const m of msgs){
+        const isSelf = m.sender == currentUser.id;
+        const time = (m.add_time || '').substring(11,16);
+        html += `<div class="chat-row-${isSelf ? 'self' : 'other'}">
+            <div class="chat-msg ${isSelf ? 'self' : 'other'}">${escapeHtml(m.content || '')}</div>
+            <div class="chat-time">${time}</div>
+        </div>`;
+    }
+    box.innerHTML = html;
+    box.scrollTop = box.scrollHeight;
+}
+function escapeHtml(str){
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// 我的好友列表（可点击聊天）
+async function renderMyFriends(){
+    const box = document.getElementById('myFriends');
+    if(!currentUser){ box.innerHTML = '<div class="empty-tip">登录后查看好友</div>'; return; }
+    const friendUids = await getFriendUids();
+    if(friendUids.length === 0){
+        box.innerHTML = '<div class="empty-tip">还没有好友，搜索昵称加好友吧</div>';
+        return;
+    }
+    const users = await queryAll('pomodoro_user');
+    const userMap = {};
+    for(const u of users){ userMap[u.id] = u.name_123; }
+    const avatarMap = await getAvatarMap();
+    let html = '';
+    for(const fid of friendUids){
+        const nick = userMap[fid] || ('用户' + fid);
+        html += `<div class="friend-item" onclick="openChat(${fid}, '${nick.replace(/'/g,"\\'")}')">
+            <div class="user-left">
+                ${avatarHtml(avatarMap[fid], nick, 'width:30px;height:30px;font-size:14px;')}
+                <span class="nick">${nick}</span>
+            </div>
+            <span class="chat-icon">💬 聊天</span>
+        </div>`;
+    }
+    box.innerHTML = html;
+}
+
+// ============================================================
+//  日期倒计时
+// ============================================================
+let countdownInterval = null;
+
+function loadCountdown(){
+    const saved = localStorage.getItem('pomodoro_countdown');
+    if(saved){
+        try{
+            const data = JSON.parse(saved);
+            showCountdown(data.name, data.date);
+        }catch(e){}
+    }
+}
+
+function showCountdown(name, dateStr){
+    document.getElementById('countdownSetup').style.display = 'none';
+    document.getElementById('countdownDisplay').style.display = 'block';
+    document.getElementById('countdownTitle').textContent = '距离「' + name + '」还有';
+    document.getElementById('countdownTarget').textContent = '目标时间：' + dateStr.replace('T', ' ');
+
+    if(countdownInterval) clearInterval(countdownInterval);
+
+    function update(){
+        const now = new Date().getTime();
+        const target = new Date(dateStr).getTime();
+        const diff = target - now;
+
+        if(diff <= 0){
+            document.getElementById('countdownTitle').textContent = '🎉「' + name + '」已到！';
+            document.getElementById('cdDays').textContent = '0';
+            document.getElementById('cdHours').textContent = '00';
+            document.getElementById('cdMinutes').textContent = '00';
+            document.getElementById('cdSeconds').textContent = '00';
+            clearInterval(countdownInterval);
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('cdDays').textContent = days;
+        document.getElementById('cdHours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('cdMinutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('cdSeconds').textContent = String(seconds).padStart(2, '0');
+    }
+
+    update();
+    countdownInterval = setInterval(update, 1000);
+}
+
+document.getElementById('setCountdownBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('countdownName').value.trim();
+    const date = document.getElementById('countdownDate').value;
+    if(!name){ showToast('请输入目标名称', 'error'); return; }
+    if(!date){ showToast('请选择目标日期', 'error'); return; }
+    localStorage.setItem('pomodoro_countdown', JSON.stringify({name, date}));
+    showCountdown(name, date);
+    showToast('倒计时已设置', 'success');
+});
+
+document.getElementById('clearCountdownBtn').addEventListener('click', ()=>{
+    localStorage.removeItem('pomodoro_countdown');
+    if(countdownInterval) clearInterval(countdownInterval);
+    document.getElementById('countdownDisplay').style.display = 'none';
+    document.getElementById('countdownSetup').style.display = 'block';
+    document.getElementById('countdownName').value = '';
+    document.getElementById('countdownDate').value = '';
+    showToast('倒计时已清除');
+});
+
+// ============================================================
+//  初始化
 // ============================================================
 function init(){
     updateTimerDisplay();
     refreshDailyUI();
     restoreLogin();
-    document.querySelectorAll('details:nth-of-type(3) summary')[0].addEventListener('click', ()=>{
-        setTimeout(()=>{ if(currentUser){ renderReceivedRequests(); renderRankList(); } }, 100);
+    loadCountdown();
+    loadBackground();
+    document.querySelectorAll('details:nth-of-type(5) summary')[0].addEventListener('click', ()=>{
+        setTimeout(()=>{ if(currentUser){ renderReceivedRequests(); renderRankList(); renderMyFriends(); } }, 100);
     });
 }
 init();
