@@ -674,7 +674,7 @@ body{padding-bottom:80px;}
         <span id="notifFrom">💬 新消息</span>
         <button class="msg-notif-close" id="notifClose">✕</button>
     </div>
-    <div class="msg-notif-content" id="notifContent"></div>
+     <div class="msg-notif-content" id="notifContent"></div>
     <div class="msg-notif-actions">
         <button class="msg-notif-btn view" id="notifView">查看</button>
         <button class="msg-notif-btn ignore" id="notifIgnore">忽略</button>
@@ -926,7 +926,7 @@ async function doLogin(){
     loginModal.classList.remove('show');
     showToast('登录成功', 'success');
     submitLoginBtn.disabled = false;
-        submitLoginBtn.textContent = '登录';
+    submitLoginBtn.textContent = '登录';
 }
 
 function setCurrentUser(user){
@@ -2065,7 +2065,7 @@ async function renderMyFriends(){
         html += `<div class="friend-item" onclick="openChat(${fid}, '${nick.replace(/'/g,"\\'")}')">
             <div class="user-left">
                 ${avatarHtml(avatarMap[fid], nick, 'width:30px;height:30px;font-size:14px;')}
-                <span class="nick">${nick}</span>
+                <span class="nick">${onlineDot}${nick} ${onlineLabel}</span>
             </div>
             <span class="chat-icon">💬 聊天</span>
         </div>`;
