@@ -859,6 +859,7 @@ body{padding-bottom:80px;}
                 <input type="date" id="profileBirthdayInput">
             </div>
             <button class="profile-save-btn" id="profileSaveBtn">保存修改</button>
+            <button class="profile-save-btn" id="profileChatBtn" style="display:none;margin-top:10px;background:linear-gradient(135deg,#3498db,#2980b9);">💬 发消息</button>
         </div>
     </div>
 </div>
@@ -1368,6 +1369,9 @@ async function onUserLogin(){
     renderReceivedRequests();
     renderRankList();
     renderMyFriends();
+    startHeartbeat();
+    startGlobalMsgCheck();
+    checkBirthday();
 }
 
 // ============================================================
@@ -2047,18 +2051,26 @@ async function sendChatMessage(){
 async function loadChatMessages(session){
     if(!currentUser || !chatWithId) return;
     const mySession = (session !== undefined) ? session : chatSession;
-    const all = await queryAll('pomodoro_message');
-    // 查询期间可能已切换/关闭聊天，丢弃过期结果
-    if(mySession !== chatSession || !chatWithId) return;
-    // 筛选与我相关的消息
-    const msgs = all.filter(r =>
-        (r.sender == currentUser.id && r.receiver == chatWithId) ||
-        (r.sender == chatWithId && r.receiver == currentUser.id)
-    );
-    // 按add_time排序
-    msgs.sort((a,b)=> (a.add_time||'').localeCompare(b.add_time||''));
-    // 强制渲染（不依赖计数判断，杜绝"加载中"卡死）
-    renderChatMessages(msgs);
+    try{
+        const all = await queryAll('pomodoro_message');
+        // 查询期间可能已切换/关闭聊天，丢弃过期结果
+        if(mySession !== chatSession || !chatWithId) return;
+        // 筛选与我相关的消息
+        const msgs = all.filter(r =>
+            (r.sender == currentUser.id && r.receiver == chatWithId) ||
+            (r.sender == chatWithId && r.receiver == currentUser.id)
+        );
+        // 按add_time排序
+        msgs.sort((a,b)=> (a.add_time||'').localeCompare(b.add_time||''));
+        // 强制渲染
+        renderChatMessages(msgs);
+    }catch(err){
+        console.error('加载聊天消息失败:', err);
+        if(mySession === chatSession && chatWithId){
+            document.getElementById('chatMessages').innerHTML =
+                '<div class="empty-tip" style="color:#e74c3c;">加载失败，请确认已建 pomodoro_message 表（字段:sender,receiver,content）</div>';
+        }
+    }
 }
 function renderChatMessages(msgs){
     const box = document.getElementById('chatMessages');
@@ -2286,9 +2298,9 @@ async function getAvatarUrlById(uid){
         const avatars = await queryAll('pomodoro_avatar');
         const a = avatars.find(r => String(r.user_account) === String(uid));
         if(a && a.avatar_url){
-            // 短串还原完整URL
+            // 短串还原完整URL（格式: APP_KEY_时间戳_md5.ext）
             if(a.avatar_url.startsWith('http')) return a.avatar_url;
-            return 'https://cd7.okayapi.com/' + a.avatar_url;
+            return 'https://cd7.okayapi.com/' + '5BFEC9F3C880A172496943389862EF70' + '_' + a.avatar_url;
         }
     }catch(e){}
     // 回退：用户表的avatar_url
@@ -2358,6 +2370,7 @@ async function openProfile(uid, isReadOnly=false){
         }
     }
     document.getElementById('profileSaveBtn').style.display = isReadOnly ? 'none' : 'block';
+    document.getElementById('profileChatBtn').style.display = isReadOnly ? 'block' : 'none';
     
     // 统计数据
     const stats = await getUserStudyStats(uid);
@@ -2433,6 +2446,13 @@ document.getElementById('birthdayCloseBtn').addEventListener('click', ()=>{
     document.getElementById('birthdayModal').classList.remove('show');
 });
 // 点击头像更换（仅自己主页）
+document.getElementById('profileChatBtn').addEventListener('click', ()=>{
+    if(profileViewingId){
+        const nick = document.getElementById('profileNickDisplay').textContent;
+        closeProfile();
+        setTimeout(()=>openChat(profileViewingId, nick), 200);
+    }
+});
 document.getElementById('profileAvatar').addEventListener('click', ()=>{
     if(profileViewingId && String(profileViewingId) === String(currentUser.id)){
         document.getElementById('avatarInput').click();
@@ -2609,7 +2629,10 @@ async function renderMyFriends(){
                 ${avatarHtml(avatarMap[fid], nick, 'width:30px;height:30px;font-size:14px;')}
                 <span class="nick">${onlineDot}${nick} ${onlineLabel}</span>
             </div>
-            <span class="chat-icon">👤 主页</span>
+            <span class="chat-icon" style="display:flex;gap:6px;align-items:center;">
+                <button class="btn btn-info" style="padding:3px 10px;font-size:11px;" onclick="event.stopPropagation();openChat(${fid},'${nick.replace(/'/g,"\\'")}')">聊天</button>
+                <span style="font-size:11px;color:#888;">主页</span>
+            </span>
         </div>`;
     }
     box.innerHTML = html;
@@ -2840,3 +2863,4 @@ function init(){
 init();
 </script>
 </body>
+</html>
