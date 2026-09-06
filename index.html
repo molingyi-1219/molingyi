@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>番茄钟</title>
+<title>番茄钟 - 联网版</title>
 <style>
 *{box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0;}
 body{
@@ -347,7 +347,7 @@ body{padding-bottom:80px;}
 <!-- 页面标题 -->
 <div class="page-header">
     <h1>🍅 番茄钟</h1>
-    <p>专注学习 · 云端同步</p>
+    <p>专注学习 · 好友比拼 · 云端同步</p>
 </div>
 
 <!-- 番茄钟计时器（主体） -->
@@ -517,7 +517,7 @@ body{padding-bottom:80px;}
 //  果创云配置
 // ============================================================
 const APP_KEY = "5BFEC9F3C880A172496943389862EF70";
-const API_DOMAIN = "http://hn.api.yesapi.net/";
+const API_DOMAIN = "https://hn.api.yesapi.net";
 // ============================================================
 //  数据表设计（用自定义字段存数据，ext_data免费版不可写）
 //  pomodoro_user: user_account=账号, name_123=昵称, user_pwd=密码
@@ -1860,4 +1860,3 @@ init();
 </script>
 </body>
 </html>
-
